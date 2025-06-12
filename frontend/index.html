@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GCS FastAPI Frontend</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, button { margin: 5px; }
+        #file-list { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Login</h2>
+    <input type="text" id="login-username" placeholder="Username">
+    <input type="password" id="login-password" placeholder="Password">
+    <button onclick="login()">Login</button>
+
+    <h2>Register</h2>
+    <input type="text" id="reg-username" placeholder="Username">
+    <input type="password" id="reg-password" placeholder="Password">
+    <button onclick="register()">Register</button>
+
+    <h2>Update KMS Key</h2>
+    <input type="text" id="kms-key" placeholder="KMS Key">
+    <button onclick="updateKmsKey()">Update Key</button>
+
+    <h2>Manage User KMS Key</h2>
+    <button onclick="createKmsKey()">Create Key</button>
+    <button onclick="rotateKmsKey()">Rotate Key</button>
+
+    <h2>File Manager</h2>
+    <input type="file" id="file-upload">
+    <button onclick="uploadFile()">Upload</button>
+    <button onclick="listFiles()">List Files</button>
+    <ul id="file-list"></ul>
+
+    <script>
+<!--        const api = "https://YOUR_BACKEND_DOMAIN";  // Replace with real domain-->
+        const api = "http://34.118.113.136"
+        let token = "";
+
+        function login() {
+            const username = document.getElementById("login-username").value;
+            const password = document.getElementById("login-password").value;
+            const data = new URLSearchParams();
+            data.append("username", username);
+            data.append("password", password);
+
+            fetch(`${api}/token`, {
+                method: "POST",
+                body: data,
+                headers: { "Content-Type": "application/x-www-form-urlencoded" }
+            }).then(res => res.json()).then(res => {
+                token = res.access_token;
+                alert("Logged in!");
+            }).catch(() => alert("Login failed"));
+        }
+
+        function register() {
+            const username = document.getElementById("reg-username").value;
+            const password = document.getElementById("reg-password").value;
+
+            fetch(`${api}/register`, {
+                method: "POST",
+                body: JSON.stringify({ username, password }),
+                headers: { "Content-Type": "application/json" }
+            }).then(res => {
+                if (res.ok) alert("Registered!");
+                else alert("Register failed");
+            });
+        }
+
+        function updateKmsKey() {
+            const newKey = document.getElementById("kms-key").value;
+            fetch(`${api}/kms-key?new_key=${encodeURIComponent(newKey)}`, {
+                method: "PUT",
+                headers: { "Authorization": `Bearer ${token}` }
+            }).then(res => res.json()).then(res => {
+                alert("Key updated: " + res.kms_key);
+            });
+        }
+
+        function createKmsKey() {
+            fetch(`${api}/kms/create`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` }
+            }).then(res => res.json()).then(res => {
+                alert("Key created: " + res.key_name);
+            });
+        }
+
+        function rotateKmsKey() {
+            fetch(`${api}/kms/rotate`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` }
+            }).then(res => res.json()).then(res => {
+                alert("Key rotated: " + res.key_name);
+            });
+        }
+
+        function uploadFile() {
+            const fileInput = document.getElementById("file-upload");
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            fetch(`${api}/files/upload`, {
+                method: "POST",
+                body: formData,
+                headers: { Authorization: `Bearer ${token}` }
+            }).then(res => res.json()).then(res => {
+                alert(res.message);
+                listFiles();
+            });
+        }
+
+        function listFiles() {
+            fetch(`${api}/files`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }).then(res => res.json()).then(files => {
+                const list = document.getElementById("file-list");
+                list.innerHTML = "";
+                files.forEach(item => {
+                    const li = document.createElement("li");
+                    li.textContent = item.name + " (KMS: " + (item.kms_key || "default") + ")";
+                    const delBtn = document.createElement("button");
+                    delBtn.textContent = "Delete";
+                    delBtn.onclick = () => deleteFile(item.name);
+                    li.appendChild(delBtn);
+                    list.appendChild(li);
+                });
+            });
+        }
+
+        function deleteFile(name) {
+            fetch(`${api}/files/${name}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            }).then(res => res.json()).then(res => {
+                alert(res.message);
+                listFiles();
+            });
+        }
+    </script>
+</body>
+</html>
