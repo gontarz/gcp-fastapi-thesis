@@ -36,3 +36,17 @@ spec:
 #               value: {{ .Values.env.JWT_EXPIRE_MINUTES | quote }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+
+          readinessProbe:
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              timeoutSeconds: 1
+              successThreshold: 1
+              failureThreshold: 1
+              httpGet:
+                host:
+                scheme: HTTP
+                path: /healthcheck
+                port: 8000
+              initialDelaySeconds: 5
+              periodSeconds: 5

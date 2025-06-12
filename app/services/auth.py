@@ -8,12 +8,17 @@ import bcrypt
 from google.cloud import kms
 
 from models.user import User
+from pathlib import Path
 
 USERS_FILE = Path("users.json")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+## TODO
+filename = Path(USERS_FILE)
+filename.touch(exist_ok=True)  # will create file, if it exists will do nothing
+##
 
 def load_users() -> list[User]:
     with open(USERS_FILE, "r") as f:

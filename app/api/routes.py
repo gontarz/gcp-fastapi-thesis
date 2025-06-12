@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
+from fastapi.responses import JSONResponse
 
 from api.dependencies import get_current_user
 from config import get_settings
@@ -21,28 +22,33 @@ router = APIRouter()
 settings = get_settings()
 
 
+@router.get("/healthcheck")
+async def healthcheck():
+    return JSONResponse("OK")
+
+
 @router.get("/files")
-async def list_user_files(user:User = Depends(get_current_user)):
+def list_user_files(user:User = Depends(get_current_user)):
     return list_files(user.id)
 
 
 @router.post("/files/upload")
-async def upload(file: UploadFile = File(...), user:User = Depends(get_current_user)):
+def upload(file: UploadFile = File(...), user:User = Depends(get_current_user)):
     return upload_file(file, user)
 
 
 @router.get("/files/{filename}")
-async def get_file(filename: str, user:User = Depends(get_current_user)):
+def get_file(filename: str, user:User = Depends(get_current_user)):
     return download_file(filename, user.id)
 
 
 @router.delete("/files/{filename}")
-async def delete_user_file(filename: str, user:User = Depends(get_current_user)):
+def delete_user_file(filename: str, user:User = Depends(get_current_user)):
     return delete_file(filename, user.id)
 
 
 @router.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
     logger.info(f"username {form_data.username} tries to obtain token")
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -54,7 +60,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 @router.post("/register")
-async def register(user: UserCreate):
+def register(user: UserCreate):
     try:
         created_user = register_user(user.username, user.password)
         return {"message": "User registered successfully", "user_id": created_user.id}
@@ -64,7 +70,7 @@ async def register(user: UserCreate):
 
 
 @router.put("/kms-key")
-async def update_kms_key(new_key: str, user: User = Depends(get_current_user)):
+def update_kms_key(new_key: str, user: User = Depends(get_current_user)):
     if not validate_kms_key(new_key):
         raise HTTPException(status_code=400, detail="Invalid or inaccessible KMS key")
 
