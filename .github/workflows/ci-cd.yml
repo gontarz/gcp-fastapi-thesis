@@ -1,10 +1,12 @@
 name: CI/CD Pipeline with GKE & Static Frontend
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+
+on: [push]
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
 
 env:
   GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
@@ -21,7 +23,7 @@ env:
 #   EMAIL: ${{ secrets.APP_EMAIL }}
   JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
 
-jobs:
+# jobs:
 #   test:
 #     name: Run Unit Tests
 #     runs-on: ubuntu-latest
@@ -43,7 +45,7 @@ jobs:
 #
 #       - name: Run tests
 #         run: pytest tests/
-
+jobs:
   deploy:
     name: Deploy to GKE and Static Frontend
     runs-on: ubuntu-latest
