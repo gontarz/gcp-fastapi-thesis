@@ -4,4 +4,4 @@ kind: ConfigMap
 metadata:
   name: gcs-fastapi-configmap
 data:
-    {{- .Values.env | toYaml | nindent 2 }}
+  {{- .Values.env | toYaml | nindent 2 }}

@@ -19,8 +19,8 @@ spec:
           ports:
             - containerPort: 80
           envFrom:
-          - configMapRef
-            name: gcs-fastapi-configmap
+          - configMapRef:
+              name: gcs-fastapi-configmap
 
 #           env:
 #             - name: GCP_BUCKET_NAME
