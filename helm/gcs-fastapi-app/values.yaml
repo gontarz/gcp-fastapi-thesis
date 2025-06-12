@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-#   repository: europe-docker.pkg.dev/YOUR_PROJECT_ID/gcs-fastapi-repo/gcs-fastapi-app
+  repository: # TODO
   tag: latest
   pullPolicy: IfNotPresent
 

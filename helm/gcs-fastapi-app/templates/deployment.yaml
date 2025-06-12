@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: fastapi
-          image: "europe-docker.pkg.dev/{{ .Values.env.GCP_PROJECT_ID }}/gcs-fastapi-repo/gcs-fastapi-app:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 80
