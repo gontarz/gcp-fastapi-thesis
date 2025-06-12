@@ -1,0 +1,6 @@
+apiVersion: v2
+name: gcs-fastapi-app
+description: A Helm chart for deploying a FastAPI app to GKE
+type: application
+version: 0.1.0
+appVersion: "1.0"

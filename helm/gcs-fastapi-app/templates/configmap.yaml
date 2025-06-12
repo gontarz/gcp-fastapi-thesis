@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gcs-fastapi-configmap
+data:
+    {{- .Values.env | toYaml | nindent 2 }}

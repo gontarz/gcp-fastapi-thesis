@@ -1,0 +1,32 @@
+replicaCount: 1
+
+image:
+#   repository: europe-docker.pkg.dev/YOUR_PROJECT_ID/gcs-fastapi-repo/gcs-fastapi-app
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 80
+
+ingress:
+  enabled: true
+  host: your-domain.com
+  clusterIssuer: letsencrypt-prod
+  email: your-email@example.com
+
+env:
+  GCP_BUCKET_NAME:
+  GCP_DEFAULT_KMS_KEY:
+  GCP_KEY_RING_ID:
+  GCP_PROJECT_ID:
+  GCP_REGION:
+  JWT_ALGORITHM:
+  JWT_EXPIRE_MINUTES:
+  JWT_SECRET_KEY:
+
+resources:
+  limits:
+    memory: "256Mi"
+  requests:
+    memory: "256Mi"
