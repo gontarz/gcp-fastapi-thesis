@@ -7,18 +7,19 @@ on:
     branches: [main]
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GAR_LOCATION: ${{ secrets.GAR_LOCATION }}
+  GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+  GCP_DEFAULT_KMS_KEY: ${{ secrets.GCP_DEFAULT_KMS_KEY }}
+  GCP_FRONTEND_BUCKET: ${{ secrets.GCP_PROJECT_ID }}-frontend
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: europe-central2
   CLUSTER_NAME: ${{ secrets.GKE_CLUSTER }}
-  CLUSTER_ZONE: ${{ secrets.GKE_ZONE }}
+  CLUSTER_ZONE: europe-central2-a
   IMAGE: gcs-fastapi-app
   RELEASE_NAME: gcs-fastapi-app
   CHART_PATH: ./helm/gcs-fastapi-app
-  DOMAIN: ${{ secrets.APP_DOMAIN }}
-  EMAIL: ${{ secrets.APP_EMAIL }}
-  BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+#   DOMAIN: ${{ secrets.APP_DOMAIN }}
+#   EMAIL: ${{ secrets.APP_EMAIL }}
   JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-  FRONTEND_BUCKET: ${{ secrets.GCP_PROJECT_ID }}-frontend
 
 jobs:
 #   test:
@@ -61,21 +62,34 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
 
       - name: Build and Push Docker image
         run: |
-          docker build -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA .
-          docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA
+          docker build -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA .
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA
 
       - name: Get GKE credentials
-        run: gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} --zone ${{ env.CLUSTER_ZONE }} --project ${{ env.PROJECT_ID }}
+        run: |
+          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
+            --zone ${{ env.CLUSTER_ZONE }} \
+            --project ${{ env.GCP_PROJECT_ID }}
 
       - name: Deploy backend with Helm
         run: |
-          helm upgrade --install ${{ env.RELEASE_NAME }} ${{ env.CHART_PATH }}             --set image.repository=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}             --set image.tag=$GITHUB_SHA             --set ingress.host=${{ env.DOMAIN }}             --set ingress.email=${{ env.EMAIL }}             --set env.JWT_SECRET_KEY=${{ env.JWT_SECRET_KEY }}             --set env.GCP_BUCKET_NAME=${{ env.BUCKET_NAME }}
+          helm upgrade \
+            --install ${{ env.RELEASE_NAME }} ${{ env.CHART_PATH }} \
+            --set image.repository=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }} \
+            --set image.tag=$GITHUB_SHA \
+#             --set ingress.host=${{ env.DOMAIN }} \
+#             --set ingress.email=${{ env.EMAIL }} \
+            --set env.JWT_SECRET_KEY=${{ env.JWT_SECRET_KEY }} \
+            --set env.GCP_BUCKET_NAME=${{ env.GCP_BUCKET_NAME }} \
+            --set env.GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }} \
+            --set env.GCP_REGION=${{ env.GCP_REGION }} \
+            --set env.GCP_DEFAULT_KMS_KEY=${{ env.GCP_DEFAULT_KMS_KEY }}
 
       - name: Upload static frontend to GCS
         run: |
-          gsutil -m cp -r frontend/* gs://${{ env.FRONTEND_BUCKET }}
-          gsutil web set -m index.html -e index.html gs://${{ env.FRONTEND_BUCKET }}
+          gsutil -m cp -r frontend/* gs://${{ env.GCP_FRONTEND_BUCKET }}
+          gsutil web set -m index.html -e index.html gs://${{ env.GCP_FRONTEND_BUCKET }}
