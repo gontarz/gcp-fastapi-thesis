@@ -71,7 +71,9 @@ jobs:
 
       - name: Get GKE credentials
         run: |
-          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} --zone ${{ env.CLUSTER_ZONE }} --project ${{ env.GCP_PROJECT_ID }}
+          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
+            --zone ${{ env.CLUSTER_ZONE }} \
+            --project ${{ env.GCP_PROJECT_ID }}
 
       - name: Deploy backend with Helm
         run: |
@@ -79,13 +81,15 @@ jobs:
             --install ${{ env.RELEASE_NAME }} ${{ env.CHART_PATH }} \
             --set image.repository=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }} \
             --set image.tag=$GITHUB_SHA \
-#             --set ingress.host=${{ env.DOMAIN }} \
-#             --set ingress.email=${{ env.EMAIL }} \
             --set env.JWT_SECRET_KEY=${{ env.JWT_SECRET_KEY }} \
             --set env.GCP_BUCKET_NAME=${{ env.GCP_BUCKET_NAME }} \
             --set env.GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }} \
             --set env.GCP_REGION=${{ env.GCP_REGION }} \
             --set env.GCP_DEFAULT_KMS_KEY=${{ env.GCP_DEFAULT_KMS_KEY }}
+
+#             --set ingress.host=${{ env.DOMAIN }} \
+#             --set ingress.email=${{ env.EMAIL }} \
+
 
       - name: Upload static frontend to GCS
         run: |
