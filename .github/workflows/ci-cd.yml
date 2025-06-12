@@ -12,6 +12,7 @@ env:
   GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
   GCP_DEFAULT_KMS_KEY: ${{ secrets.GCP_DEFAULT_KMS_KEY }}
   GCP_FRONTEND_BUCKET: ${{ secrets.GCP_PROJECT_ID }}-frontend
+  GCP_KEY_RING_ID: ${{ secrets.GCP_KEY_RING_ID }}
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: europe-central2
   CLUSTER_NAME: ${{ secrets.GKE_CLUSTER }}
@@ -90,9 +91,10 @@ jobs:
             --set image.tag=$GITHUB_SHA \
             --set env.JWT_SECRET_KEY=${{ env.JWT_SECRET_KEY }} \
             --set env.GCP_BUCKET_NAME=${{ env.GCP_BUCKET_NAME }} \
+            --set env.GCP_DEFAULT_KMS_KEY=${{ env.GCP_DEFAULT_KMS_KEY }} \
+            --set env.GCP_KEY_RING_ID=${{ secrets.GCP_KEY_RING_ID }} \
             --set env.GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }} \
-            --set env.GCP_REGION=${{ env.GCP_REGION }} \
-            --set env.GCP_DEFAULT_KMS_KEY=${{ env.GCP_DEFAULT_KMS_KEY }}
+            --set env.GCP_REGION=${{ env.GCP_REGION }}
 
 #             --set ingress.host=${{ env.DOMAIN }} \
 #             --set ingress.email=${{ env.EMAIL }} \
