@@ -71,11 +71,16 @@ jobs:
           docker build -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA .
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA
 
+#       - name: Get GKE credentials
+#         run: |
+#           gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
+#             --zone ${{ env.CLUSTER_ZONE }} \
+#             --project ${{ env.GCP_PROJECT_ID }}
       - name: Get GKE credentials
-        run: |
-          gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
-            --zone ${{ env.CLUSTER_ZONE }} \
-            --project ${{ env.GCP_PROJECT_ID }}
+        uses: 'google-github-actions/get-gke-credentials@v2'
+        with:
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          location: ${{ env.CLUSTER_ZONE }}
 
       - name: Deploy backend with Helm
         run: |
