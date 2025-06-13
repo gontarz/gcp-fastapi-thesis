@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: {{ .Release.Name }}
   annotations:
-#     kubernetes.io/ingress.class: "gce"  # lub "nginx" jeśli używasz Ingress-NGINX
+    kubernetes.io/ingress.class: "nginx"  # lub "nginx" jeśli używasz Ingress-NGINX
 #     cert-manager.io/cluster-issuer: "{{ .Values.ingress.clusterIssuer }}"
     kubernetes.io/ingress.global-static-ip-name: fastapi-gke-ip-address
     nginx.ingress.kubernetes.io/rewrite-target: /
