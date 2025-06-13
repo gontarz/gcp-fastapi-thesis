@@ -1,7 +1,6 @@
 import json
 import logging
 import uuid
-from pathlib import Path
 from typing import Optional
 
 import bcrypt
@@ -16,8 +15,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 ## TODO
-filename = Path(USERS_FILE)
-filename.touch(exist_ok=True)  # will create file, if it exists will do nothing
+if not USERS_FILE.exists():
+    USERS_FILE.touch()
+    with open(USERS_FILE, "w") as f:
+        json.dump([], f, indent=2)
 ##
 
 def load_users() -> list[User]:

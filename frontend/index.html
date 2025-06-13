@@ -35,7 +35,7 @@
 
     <script>
 <!--        const api = "https://YOUR_BACKEND_DOMAIN";  // Replace with real domain-->
-        const api = "http://34.118.113.136"
+        const api = "http://34.149.178.106"
         let token = "";
 
         function login() {
@@ -125,6 +125,10 @@
                     delBtn.textContent = "Delete";
                     delBtn.onclick = () => deleteFile(item.name);
                     li.appendChild(delBtn);
+                    const fetchBtn = document.createElement("button");
+                    fetchBtn.textContent = "Download";
+                    fetchBtn.onclick = () => downloadFile(item.name);
+                    li.appendChild(fetchBtn);
                     list.appendChild(li);
                 });
             });
@@ -133,6 +137,16 @@
         function deleteFile(name) {
             fetch(`${api}/files/${name}`, {
                 method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            }).then(res => res.json()).then(res => {
+                alert(res.message);
+                listFiles();
+            });
+        }
+
+        function downloadFile(name) {
+            fetch(`${api}/files/${name}`, {
+                method: "GET",
                 headers: { Authorization: `Bearer ${token}` }
             }).then(res => res.json()).then(res => {
                 alert(res.message);

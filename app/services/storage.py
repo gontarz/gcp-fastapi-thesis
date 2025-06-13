@@ -13,7 +13,7 @@ bucket = client.bucket(settings.GCP_BUCKET_NAME)
 
 def upload_file(file, user):
     blob = bucket.blob(f"{user.id}/{file.filename}")
-    blob.kms_key_name = user.kms_key or settings.DEFAULT_KMS_KEY  # TODO
+    blob.kms_key_name = user.kms_key or settings.GCP_DEFAULT_KMS_KEY  # TODO
     # file.seek(0) # TODO
     try:
         blob.upload_from_file(file.file)
