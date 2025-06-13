@@ -17,7 +17,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: 80
+            - containerPort: 8000
           envFrom:
           - configMapRef:
               name: gcs-fastapi-configmap
@@ -37,16 +37,16 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 
-          readinessProbe:
-              initialDelaySeconds: 10
-              periodSeconds: 10
-              timeoutSeconds: 1
-              successThreshold: 1
-              failureThreshold: 1
-              httpGet:
-                host:
-                scheme: HTTP
-                path: /healthcheck
-                port: 8000
-              initialDelaySeconds: 5
-              periodSeconds: 5
+#           readinessProbe:
+#               initialDelaySeconds: 10
+#               periodSeconds: 10
+#               timeoutSeconds: 1
+#               successThreshold: 1
+#               failureThreshold: 1
+#               httpGet:
+#                 host:
+#                 scheme: HTTP
+#                 path: /healthcheck
+#                 port: 8000
+#               initialDelaySeconds: 5
+#               periodSeconds: 5
