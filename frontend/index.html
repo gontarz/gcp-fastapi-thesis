@@ -34,7 +34,6 @@
     <ul id="file-list"></ul>
 
     <script>
-<!--        const api = "https://YOUR_BACKEND_DOMAIN";  // Replace with real domain-->
         const api = "http://34.149.178.106"
         let token = "";
 
@@ -148,10 +147,26 @@
             fetch(`${api}/files/${name}`, {
                 method: "GET",
                 headers: { Authorization: `Bearer ${token}` }
-            }).then(res => res.json()).then(res => {
-                alert(res.message);
-                listFiles();
-            });
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error("Błąd podczas pobierania pliku.");
+                }
+                return res.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = name;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(err => {
+                    alert("Nie udało się pobrać pliku: " + err.message);
+                });
         }
     </script>
 </body>

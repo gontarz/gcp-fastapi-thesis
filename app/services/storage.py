@@ -32,11 +32,12 @@ def list_files(user_id):
     ]
 
 
-def download_file(filename, user_id):
-    blob = bucket.blob(f"{user_id}/{filename}")
+def download_file(filename, user):
+    blob = bucket.blob(f"{user.id}/{filename}")
     if not blob.exists():
-        logger.error(f"File '{filename}' not found for user '{user_id}'")
+        logger.error(f"File '{filename}' not found for user '{user.id}'")
         raise HTTPException(status_code=404, detail="File not found")
+    # blob.kms_key_name = user.kms_key or settings.GCP_DEFAULT_KMS_KEY  # TODO
     return blob.download_as_bytes()
 
 

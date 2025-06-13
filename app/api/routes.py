@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from api.dependencies import get_current_user
 from config import get_settings
@@ -12,6 +12,7 @@ from models.user import User, UserCreate
 from services.auth import authenticate_user, load_users, register_user, save_user, validate_kms_key
 from services.storage import delete_file, download_file, list_files, upload_file
 from services.kms import create_kms_key_for_user, create_key_version
+import io
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -44,7 +45,11 @@ def upload(file: UploadFile = File(...), user:User = Depends(get_current_user)):
 
 @router.get("/files/{filename}")
 def get_file(filename: str, user:User = Depends(get_current_user)):
-    return download_file(filename, user.id)
+    file_content = download_file(filename, user)
+    return StreamingResponse(
+        content = io.BytesIO(file_content),
+        media_type="application/octet-stream"
+    )
 
 
 @router.delete("/files/{filename}")
