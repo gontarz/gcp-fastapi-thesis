@@ -27,6 +27,11 @@ async def healthcheck():
     return JSONResponse("OK")
 
 
+@router.get("/")
+async def root():
+    return JSONResponse("OK")
+
+
 @router.get("/files")
 def list_user_files(user:User = Depends(get_current_user)):
     return list_files(user.id)
