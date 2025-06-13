@@ -5,28 +5,29 @@ metadata:
   annotations:
 #     kubernetes.io/ingress.class: "nginx"  # lub "nginx" jeśli używasz Ingress-NGINX
 #     cert-manager.io/cluster-issuer: "{{ .Values.ingress.clusterIssuer }}"
+    ingress.gcp.kubernetes.io/pre-shared-cert: frontend-ssl-cert
     kubernetes.io/ingress.global-static-ip-name: fastapi-gke-ip-address
 #     nginx.ingress.kubernetes.io/rewrite-target: /
   labels:
     app: {{ .Release.Name }}
 spec:
-  defaultBackend:
-    service:
-      name: {{ .Release.Name }}
-      port:
-        number: {{ .Values.service.port }}
+#   defaultBackend:
+#     service:
+#       name: {{ .Release.Name }}
+#       port:
+#         number: {{ .Values.service.port }}
 #   tls:
 #     - hosts:
 #         - {{ .Values.ingress.host }}
 #       secretName: {{ .Release.Name }}-tls
-#   rules:
-# #     - host: {{ .Values.ingress.host }}
-#     - http:
-#         paths:
-#           - path: /
-#             pathType: Prefix
-#             backend:
-#               service:
-#                 name: {{ .Release.Name }}
-#                 port:
-#                   number: {{ .Values.service.port }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}
+                port:
+                  number: {{ .Values.service.port }}
