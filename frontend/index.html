@@ -19,13 +19,11 @@
     <input type="password" id="reg-password" placeholder="Password">
     <button onclick="register()">Register</button>
 
-    <h2>Update KMS Key</h2>
-    <input type="text" id="kms-key" placeholder="KMS Key">
-    <button onclick="updateKmsKey()">Update Key</button>
-
-    <h2>Manage User KMS Key</h2>
+    <h2>Manage KMS Key</h2>
     <button onclick="createKmsKey()">Create Key</button>
     <button onclick="rotateKmsKey()">Rotate Key</button>
+    <input type="text" id="kms-key" placeholder="KMS Key">
+    <button onclick="updateKmsKey()">Update Key</button>
 
     <h2>File Manager</h2>
     <input type="file" id="file-upload">
@@ -34,7 +32,8 @@
     <ul id="file-list"></ul>
 
     <script>
-        const api = "https://api.k-gontarz.com"
+<!--        const api = "https://api.k-gontarz.com"-->
+        const api = "http://127.0.0.1:8000"
         let token = "";
 
         function login() {
@@ -70,9 +69,13 @@
 
         function updateKmsKey() {
             const newKey = document.getElementById("kms-key").value;
-            fetch(`${api}/kms-key?new_key=${encodeURIComponent(newKey)}`, {
+            fetch(`${api}/kms/update`, {
                 method: "PUT",
-                headers: { "Authorization": `Bearer ${token}` }
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ key: newKey })
             }).then(res => res.json()).then(res => {
                 alert("Key updated: " + res.kms_key);
             });
@@ -83,7 +86,20 @@
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` }
             }).then(res => res.json()).then(res => {
-                alert("Key created: " + res.key_name);
+
+                const newKey = res.key_name;
+                alert("Key created: " + newKey);
+
+                return fetch(`${api}/kms/update`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ key: newKey })
+                });
+            }).then(res => res.json()).then(res => {
+                alert("Key updated: " + res.kms_key);
             });
         }
 
@@ -92,7 +108,20 @@
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` }
             }).then(res => res.json()).then(res => {
-                alert("Key rotated: " + res.key_name);
+
+                const newKey = res.key_name;
+                alert("Key rotated: " + newKey);
+
+                return fetch(`${api}/kms/update`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ key: newKey })
+                });
+            }).then(res => res.json()).then(res => {
+                alert("Key updated: " + res.kms_key);
             });
         }
 
@@ -106,7 +135,7 @@
                 body: formData,
                 headers: { Authorization: `Bearer ${token}` }
             }).then(res => res.json()).then(res => {
-                alert(res.message);
+                alert("File Upload success filename:" + res.filename);
                 listFiles();
             });
         }
@@ -137,8 +166,8 @@
             fetch(`${api}/files/${name}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
-            }).then(res => res.json()).then(res => {
-                alert(res.message);
+            }).then(res => {
+                alert("File Delete success filename: " + name);
                 listFiles();
             });
         }

@@ -1,68 +1,44 @@
-import json
 import logging
 import uuid
 from typing import Optional
+from datetime import datetime, timedelta,timezone
+from config import get_settings
+from jose import jwt
 
 import bcrypt
-from google.cloud import kms
 
-from models.user import User
-from pathlib import Path
-
-USERS_FILE = Path("users.json")
+from models.request import User
+from services.user import find_user_by_name, is_username_taken, save_user
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-## TODO
-if not USERS_FILE.exists():
-    USERS_FILE.touch()
-    with open(USERS_FILE, "w") as f:
-        json.dump([], f, indent=2)
-##
-
-def load_users() -> list[User]:
-    with open(USERS_FILE, "r") as f:
-        data = json.load(f)
-    return [User(**user) for user in data]
-
-
-def save_user(user: User, overwrite=False) -> None:
-    users = load_users()
-    if overwrite:
-        users = [u for u in users if u.id != user.id]
-    users.append(user)
-    with open(USERS_FILE, "w") as f:
-        json.dump([u.model_dump() for u in users], f, indent=2)
-
-
-def is_username_taken(username: str) -> bool:
-    logger.debug(f"username {username}")
-    return any(u.username == username for u in load_users())
 
 
 def register_user(username: str, password: str) -> User:
     if is_username_taken(username):
         raise ValueError("Username already taken")
+
     hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     user = User(id=str(uuid.uuid4()), username=username, password=hashed_password)
-    print("register", user) # TODO
-    save_user(user)
+    print("register", user)  # TODO
+    save_user(user=user)
     return user
 
 
 def authenticate_user(username: str, password: str) -> Optional[User]:
-    users = load_users()
-    for user in users:
-        if user.username == username and bcrypt.checkpw(password.encode(), user.password.encode()):
-            return user
-    return None
+    user = find_user_by_name(username=username)
+    if user is None:
+        return None
+
+    if bcrypt.checkpw(password.encode(), user.password.encode()) is False:
+        return None
+
+    return user
 
 
-def validate_kms_key(key_name: str) -> bool:
-    try:
-        client = kms.KeyManagementServiceClient()
-        client.get_crypto_key(request={"name": key_name})
-        return True
-    except Exception:
-        return False
+def create_token(user:User) -> str:
+    settings = get_settings()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
+    to_encode = {"sub": user.id, "exp": expire}
+    token = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return token

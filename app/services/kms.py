@@ -5,10 +5,8 @@ from config import get_settings
 client = kms.KeyManagementServiceClient()
 
 
-def create_kms_key_for_user(user_id: str):
+def create_kms_key_for_user(key_id: str) -> str:
     settings = get_settings()
-
-    key_id = f"key-{user_id}"
 
     # Build the parent key ring name.
     key_ring_name = client.key_ring_path(
@@ -27,40 +25,19 @@ def create_kms_key_for_user(user_id: str):
         },
     }
 
-    try:
-        created_key = client.create_crypto_key(
+    created_key = client.create_crypto_key(
             request={
                 "parent": key_ring_name,
                 "crypto_key_id": key_id,
                 "crypto_key": key,
             }
         )
-        return {"key_name": created_key.name}
-    except Exception as e:
-        return {"error": str(e)}
+
+    return created_key.name
 
 
-def create_key_version(
-        # project_id: str, location_id: str, key_ring_id: str, key_id: str
-        user_id: str
-
-) -> kms.CryptoKey:
-    """
-    Creates a new version of the given key.
-
-    Args:
-        project_id (string): Google Cloud project ID (e.g. 'my-project').
-        location_id (string): Cloud KMS location (e.g. 'us-east1').
-        key_ring_id (string): ID of the Cloud KMS key ring (e.g. 'my-key-ring').
-        key_id (string): ID of the key for which to create a new version (e.g. 'my-key').
-
-    Returns:
-        CryptoKeyVersion: Cloud KMS key version.
-
-    """
+def create_key_version(key_id: str) -> str:
     settings = get_settings()
-
-    key_id = f"key-{user_id}"
 
     # Build the parent key name.
     key_name = client.crypto_key_path(
@@ -79,3 +56,11 @@ def create_key_version(
     )
     print(f"Created key version: {created_version.name}")  # TODO
     return created_version.name
+
+
+def validate_kms_key(key_name: str) -> bool:
+    try:
+        client.get_crypto_key(request={"name": key_name})
+    except Exception:
+        return False
+    return True

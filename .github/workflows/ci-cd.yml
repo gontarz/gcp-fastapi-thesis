@@ -1,7 +1,5 @@
 name: CI/CD Pipeline with GKE & Static Frontend
 
-
-# on: [push]
 on:
   push:
     branches: [main]
@@ -11,7 +9,7 @@ on:
 env:
   GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
   GCP_DEFAULT_KMS_KEY: ${{ secrets.GCP_DEFAULT_KMS_KEY }}
-  GCP_FRONTEND_BUCKET: ${{ secrets.GCP_PROJECT_ID }}-frontend
+  GCP_FRONTEND_BUCKET: ${{ secrets.GCP_BUCKET_NAME }}-frontend
   GCP_KEY_RING_ID: ${{ secrets.GCP_KEY_RING_ID }}
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: europe-central2
@@ -94,12 +92,9 @@ jobs:
 #             --set ingress.host=${{ env.DOMAIN }} \
 #             --set ingress.email=${{ env.EMAIL }} \
 
-
       - name: Upload static frontend to GCS
         run: |
           gcloud storage cp frontend/* gs://${{ env.GCP_FRONTEND_BUCKET }}
           gcloud storage buckets update gs://${{ env.GCP_FRONTEND_BUCKET }} \
             --web-main-page-suffix=index.html \
             --web-error-page=404.html
-#           gsutil -m cp -r frontend/* gs://${{ env.GCP_FRONTEND_BUCKET }}
-#           gsutil web set -m index.html -e 404.html gs://${{ env.GCP_FRONTEND_BUCKET }}
