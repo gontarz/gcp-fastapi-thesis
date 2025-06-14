@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -62,21 +62,16 @@ jobs:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up gcloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
 
-      - name: Build and Push Docker image
+      - name: Build and Push Docker image # TODO push image sha tag
         run: |
           docker build -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA .
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA
 
-#       - name: Get GKE credentials
-#         run: |
-#           gcloud container clusters get-credentials ${{ env.CLUSTER_NAME }} \
-#             --zone ${{ env.CLUSTER_ZONE }} \
-#             --project ${{ env.GCP_PROJECT_ID }}
       - name: Get GKE credentials
         uses: 'google-github-actions/get-gke-credentials@v2'
         with:
@@ -102,5 +97,9 @@ jobs:
 
       - name: Upload static frontend to GCS
         run: |
-          gsutil -m cp -r frontend/* gs://${{ env.GCP_FRONTEND_BUCKET }}
-          gsutil web set -m index.html -e index.html gs://${{ env.GCP_FRONTEND_BUCKET }}
+          gcloud storage cp frontend/* gs://${{ env.GCP_FRONTEND_BUCKET }}
+          gcloud storage buckets update gs://${{ env.GCP_FRONTEND_BUCKET }} \
+            --web-main-page-suffix=index.html \
+            --web-error-page=404.html
+#           gsutil -m cp -r frontend/* gs://${{ env.GCP_FRONTEND_BUCKET }}
+#           gsutil web set -m index.html -e 404.html gs://${{ env.GCP_FRONTEND_BUCKET }}
