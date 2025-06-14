@@ -12,11 +12,6 @@ metadata:
   labels:
     app: {{ .Release.Name }}
 spec:
-#   defaultBackend:
-#     service:
-#       name: {{ .Release.Name }}
-#       port:
-#         number: {{ .Values.service.port }}
 #   tls:
 #     - hosts:
 #         - {{ .Values.ingress.host }}
