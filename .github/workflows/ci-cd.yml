@@ -74,28 +74,28 @@ jobs:
         with:
           terraform_version: "1.12.2"
 
-      - name: Terraform fmt
+      - name: Format
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform fmt -check
         continue-on-error: true
 
-      - name: Terraform validate
+      - name: Init
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform init
+
+      - name: Validate
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform validate
 
-      - name: Terraform validate
-        working-directory: ${{ env.TERRAFORM_DIR }}
-        run: terraform validate
-
-      - name: Terraform test
+      - name: Test
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform test
 
-      - name: Terraform Plan
+      - name: Plan
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform plan -out=${{ env.TERRAFORM_PLAN_FILE }}
 
-      - name: Apply Terraform
+      - name: Apply
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform apply -auto-approve {{ env.TERRAFORM_PLAN_FILE }}
 
