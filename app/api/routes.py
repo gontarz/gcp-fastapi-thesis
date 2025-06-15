@@ -34,17 +34,17 @@ async def root() -> JSONResponse:
 
 @router.get("/files")
 def list_user_files(user: User = Depends(get_current_user)):
-    return list_files(user.username)
+    return list_files(username=user.username)
 
 
 @router.post("/files/upload")
 def upload(file: UploadFile = File(...), user: User = Depends(get_current_user)):
-    max_size = 2
+    max_size = 5
     # max size of file limit
     if file.size > max_size * 1024 * 1024:
         raise HTTPException(status_code=413, detail=f"File size too large. Max size is {max_size} MB.")
 
-    return upload_file(file, user)
+    return upload_file(file=file, user=user)
 
 
 @router.get("/files/{filename}")
