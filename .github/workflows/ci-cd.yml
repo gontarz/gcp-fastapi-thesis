@@ -93,7 +93,7 @@ jobs:
 
       - name: Apply Terraform
         working-directory: ${{ env.TERRAFORM_DIR }}
-        run: terraform apply -auto-approve {{ TERRAFORM_PLAN_FILE }}
+        run: terraform apply -auto-approve {{ env.TERRAFORM_PLAN_FILE }}
 
 
   deploy:
