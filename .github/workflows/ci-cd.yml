@@ -83,6 +83,10 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform validate
 
+      - name: Terraform validate
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform validate
+
       - name: Terraform test
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform test
