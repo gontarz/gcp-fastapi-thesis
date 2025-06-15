@@ -39,6 +39,11 @@ def list_user_files(user: User = Depends(get_current_user)):
 
 @router.post("/files/upload")
 def upload(file: UploadFile = File(...), user: User = Depends(get_current_user)):
+    max_size = 2
+    # max size of file limit
+    if file.size > max_size * 1024 * 1024:
+        raise HTTPException(status_code=413, detail=f"File size too large. Max size is {max_size} MB.")
+
     return upload_file(file, user)
 
 
