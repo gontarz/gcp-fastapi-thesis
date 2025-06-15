@@ -99,7 +99,7 @@ jobs:
   deploy:
     name: Deploy GKE, Static Frontend
     runs-on: ubuntu-latest
-    needs: Deploy Terraform
+    needs: "Deploy Terraform"
 #     needs: test
 
     steps:
