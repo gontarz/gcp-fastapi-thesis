@@ -5,6 +5,7 @@ from functools import lru_cache
 class Settings(BaseSettings):
     GCP_BUCKET_NAME:str
     GCP_DEFAULT_KMS_KEY:str
+    GCP_FIRESTORE_COLLECTION_NAME: str = "users"
     GCP_KEY_RING_ID:str
     GCP_PROJECT_ID:str
     GCP_REGION:str

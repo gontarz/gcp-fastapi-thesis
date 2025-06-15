@@ -26,12 +26,12 @@ def create_kms_key_for_user(key_id: str) -> str:
     }
 
     created_key = client.create_crypto_key(
-            request={
-                "parent": key_ring_name,
-                "crypto_key_id": key_id,
-                "crypto_key": key,
-            }
-        )
+        request={
+            "parent": key_ring_name,
+            "crypto_key_id": key_id,
+            "crypto_key": key,
+        }
+    )
 
     return created_key.name
 

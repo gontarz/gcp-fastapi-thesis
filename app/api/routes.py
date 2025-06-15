@@ -1,19 +1,17 @@
 import io
 import logging
-from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt
 
 from api.dependencies import get_current_user
 from config import get_settings
 from models.request import KMSKey, User, UserCreate
-from services.auth import authenticate_user, register_user,create_token
+from services.auth import AuthError, authenticate_user, create_token, register_user
+from services.firestore import update_user_kms_key
 from services.kms import create_key_version, create_kms_key_for_user, validate_kms_key
 from services.storage import delete_file, download_file, list_files, upload_file
-from services.user import find_user_by_name, save_user
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -62,19 +60,20 @@ def delete_user_file(filename: str, user: User = Depends(get_current_user)):
 @router.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     logger.info(f"username {form_data.username} tries to obtain token")
-    user = authenticate_user(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    try:
+        user = authenticate_user(form_data.username, form_data.password)
+    except AuthError as err:
+        raise HTTPException(status_code=401, detail=str(err))
 
     token = create_token(user=user)
-
     return {"access_token": token, "token_type": "bearer"}
 
 
 @router.post("/register")
 def register(user: UserCreate):
     try:
-        created_user = register_user(user.username, user.password)
+        created_user = register_user(username=user.username, password=user.password)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {"message": "User registered successfully", "user_id": created_user.id}
@@ -85,12 +84,8 @@ def update_kms_key(key: KMSKey, user: User = Depends(get_current_user)):
     if not validate_kms_key(key.key):
         raise HTTPException(status_code=400, detail="Invalid or inaccessible KMS key")
 
-    user = find_user_by_name(username=user.username)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-
     user.kms_key = key.key
-    save_user(user, overwrite=True)
+    update_user_kms_key(username=user.username, kms_key=user.kms_key)
 
     return {"kms_key": user.kms_key}
 

@@ -1,44 +1,65 @@
 import logging
 import uuid
-from typing import Optional
-from datetime import datetime, timedelta,timezone
-from config import get_settings
-from jose import jwt
+from datetime import datetime, timedelta, timezone
 
 import bcrypt
+from jose import JWTError, jwt
 
+from config import get_settings
 from models.request import User
-from services.user import find_user_by_name, is_username_taken, save_user
+from services.firestore import create_user, get_user
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+settings = get_settings()
+
+
+class AuthError(Exception):
+    pass
+
+
+def create_token(user: User) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
+    to_encode = {"sub": user.username, "exp": expire}
+    token = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    return token
+
+
+def get_user_from_token(token: str) -> User:
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+    except JWTError:
+        raise AuthError("Could not validate token")
+
+    username: str = payload.get("sub")
+    if username is None:
+        raise AuthError("Invalid token")
+
+    user = get_user(username=username)
+    if user is None:
+        raise AuthError("User not found")
+
+    return user
+
 
 def register_user(username: str, password: str) -> User:
-    if is_username_taken(username):
-        raise ValueError("Username already taken")
+    if get_user(username):
+        raise AuthError("Username already taken")
 
     hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     user = User(id=str(uuid.uuid4()), username=username, password=hashed_password)
-    print("register", user)  # TODO
-    save_user(user=user)
+    create_user(username=user.username, user_data=user.model_dump())
+    logger.info(f"registered {user}")
     return user
 
 
-def authenticate_user(username: str, password: str) -> Optional[User]:
-    user = find_user_by_name(username=username)
+def authenticate_user(username: str, password: str) -> User:
+    user = get_user(username=username)
     if user is None:
-        return None
+        raise AuthError("User not found")
 
     if bcrypt.checkpw(password.encode(), user.password.encode()) is False:
-        return None
+        raise AuthError("Password check failed")
 
     return user
-
-
-def create_token(user:User) -> str:
-    settings = get_settings()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
-    to_encode = {"sub": user.id, "exp": expire}
-    token = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-    return token

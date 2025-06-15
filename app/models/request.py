@@ -12,5 +12,6 @@ class UserCreate(BaseModel):
     username: str
     password: str
 
+
 class KMSKey(BaseModel):
-    key:str
+    key: str
