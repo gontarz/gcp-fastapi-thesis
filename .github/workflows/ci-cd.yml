@@ -89,7 +89,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ${{ env.TERRAFORM_DIR }}
-        run: terraform plan -out=${{ TERRAFORM_PLAN_FILE }}
+        run: terraform plan -out=${{ env.TERRAFORM_PLAN_FILE }}
 
       - name: Apply Terraform
         working-directory: ${{ env.TERRAFORM_DIR }}
