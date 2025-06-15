@@ -24,18 +24,13 @@ spec:
           - configMapRef:
               name: gcs-fastapi-configmap
 
-#           env:
-#             - name: GCP_BUCKET_NAME
-#               value: {{ .Values.env.GCP_BUCKET_NAME | quote }}
-#             - name: JWT_SECRET_KEY
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: {{ .Release.Name }}-secrets
-#                   key: JWT_SECRET_KEY
-#             - name: JWT_ALGORITHM
-#               value: {{ .Values.env.JWT_ALGORITHM | quote }}
-#             - name: JWT_EXPIRE_MINUTES
-#               value: {{ .Values.env.JWT_EXPIRE_MINUTES | quote }}
+          env:
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secrets
+                  key: JWT_SECRET_KEY
+
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
 

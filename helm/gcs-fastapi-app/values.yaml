@@ -24,6 +24,8 @@ env:
   GCP_REGION:
   JWT_ALGORITHM:
   JWT_EXPIRE_MINUTES:
+
+secrets:
   JWT_SECRET_KEY:
 
 resources:

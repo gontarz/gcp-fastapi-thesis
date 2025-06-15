@@ -6,21 +6,25 @@ on:
   pull_request:
     branches: [main]
 
+## CICD secrets ${{ secrets.<secret_name> }}
+# APP_DOMAIN
+# GCP_BUCKET_NAME
+# GCP_DEFAULT_KMS_KEY
+# GCP_KEY_RING_ID
+# GCP_PROJECT_ID
+# GCP_SA_KEY
+# GKE_CLUSTER
+# JWT_SECRET_KEY
+
 env:
-  GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
-  GCP_DEFAULT_KMS_KEY: ${{ secrets.GCP_DEFAULT_KMS_KEY }}
   GCP_FRONTEND_BUCKET: ${{ secrets.GCP_BUCKET_NAME }}-frontend
-  GCP_KEY_RING_ID: ${{ secrets.GCP_KEY_RING_ID }}
-  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: europe-central2
-  CLUSTER_NAME: ${{ secrets.GKE_CLUSTER }}
   CLUSTER_ZONE: europe-central2-a
   IMAGE: gcs-fastapi-app
   RELEASE_NAME: gcs-fastapi-app
   CHART_PATH: ./helm/gcs-fastapi-app
-#   DOMAIN: ${{ secrets.APP_DOMAIN }}
 #   EMAIL: ${{ secrets.APP_EMAIL }}
-  JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+
 
 jobs:
 #   test:
@@ -67,29 +71,28 @@ jobs:
 
       - name: Build and Push Docker image # TODO push image sha tag
         run: |
-          docker build -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA .
-          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA
+          docker build -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA .
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }}:$GITHUB_SHA
 
       - name: Get GKE credentials
         uses: 'google-github-actions/get-gke-credentials@v2'
         with:
-          cluster_name: ${{ env.CLUSTER_NAME }}
+          cluster_name: ${{ secrets.GKE_CLUSTER }}
           location: ${{ env.CLUSTER_ZONE }}
 
       - name: Deploy backend with Helm
         run: |
           helm upgrade \
             --install ${{ env.RELEASE_NAME }} ${{ env.CHART_PATH }} \
-            --set image.repository=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }} \
+            --set image.repository=${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }} \
             --set image.tag=$GITHUB_SHA \
-            --set env.JWT_SECRET_KEY=${{ env.JWT_SECRET_KEY }} \
-            --set env.GCP_BUCKET_NAME=${{ env.GCP_BUCKET_NAME }} \
-            --set env.GCP_DEFAULT_KMS_KEY=${{ env.GCP_DEFAULT_KMS_KEY }} \
+            --set secrets.JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
+            --set env.GCP_BUCKET_NAME=${{ secrets.GCP_BUCKET_NAME }} \
+            --set env.GCP_DEFAULT_KMS_KEY=${{ secrets.GCP_DEFAULT_KMS_KEY }} \
             --set env.GCP_KEY_RING_ID=${{ secrets.GCP_KEY_RING_ID }} \
-            --set env.GCP_PROJECT_ID=${{ env.GCP_PROJECT_ID }} \
-            --set env.GCP_REGION=${{ env.GCP_REGION }}
-
-#             --set ingress.host=${{ env.DOMAIN }} \
+            --set env.GCP_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }} \
+            --set env.GCP_REGION=${{ env.GCP_REGION }} \
+            --set ingress.host=${{ secrets.APP_DOMAIN }}
 #             --set ingress.email=${{ env.EMAIL }} \
 
       - name: Upload static frontend to GCS
