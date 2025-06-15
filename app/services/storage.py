@@ -13,37 +13,37 @@ bucket = client.bucket(settings.GCP_BUCKET_NAME)
 
 
 def upload_file(file: File, user: User) -> dict:
-    blob = bucket.blob(f"{user.id}/{file.filename}")
+    blob = bucket.blob(f"{user.username}/{file.filename}")
     if user.kms_key:
         blob.kms_key_name = user.kms_key
     try:
         blob.upload_from_file(file.file)
     except Exception as e:
-        logger.exception(f"Failed to upload file '{file.filename}' for user '{user.id}': {e}")
+        logger.exception(f"Failed to upload file '{file.filename}' for user '{user.username}': {e}")
         raise HTTPException(status_code=500, detail="Upload failed")
 
     return {"filename": file.filename, "kms": blob.kms_key_name}
 
 
-def list_files(user_id: str) -> list[dict]:
-    blobs = bucket.list_blobs(prefix=f"{user_id}/")
+def list_files(username: str) -> list[dict]:
+    blobs = bucket.list_blobs(prefix=f"{username}/")
     return [
         {"name": blob.name.split("/", 1)[-1], "kms_key": blob.kms_key_name}
-        for blob in blobs if blob.name != f"{user_id}/"
+        for blob in blobs if blob.name != f"{username}/"
     ]
 
 
 def download_file(filename: str, user: User) -> bytes:
-    blob = bucket.blob(f"{user.id}/{filename}")
+    blob = bucket.blob(f"{user.username}/{filename}")
     if not blob.exists():
-        logger.error(f"File '{filename}' not found for user '{user.id}'")
+        logger.error(f"File '{filename}' not found for user '{user.username}'")
         raise HTTPException(status_code=404, detail="File not found")
     return blob.download_as_bytes()
 
 
-def delete_file(filename: str, user_id: str):
-    blob = bucket.blob(f"{user_id}/{filename}")
+def delete_file(filename: str, username: str):
+    blob = bucket.blob(f"{username}/{filename}")
     if not blob.exists():
-        logger.error(f"File '{filename}' not found for user '{user_id}'")
+        logger.error(f"File '{filename}' not found for user '{username}'")
         raise HTTPException(status_code=404, detail="File not found")
     blob.delete()

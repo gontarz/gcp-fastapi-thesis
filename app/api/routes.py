@@ -34,7 +34,7 @@ async def root() -> JSONResponse:
 
 @router.get("/files")
 def list_user_files(user: User = Depends(get_current_user)):
-    return list_files(user.id)
+    return list_files(user.username)
 
 
 @router.post("/files/upload")
@@ -58,7 +58,7 @@ def get_file(filename: str, user: User = Depends(get_current_user)) -> Streaming
 
 @router.delete("/files/{filename}")
 def delete_user_file(filename: str, user: User = Depends(get_current_user)):
-    delete_file(filename, user.id)
+    delete_file(filename, user.username)
     return Response()
 
 
@@ -81,7 +81,7 @@ def register(user: UserCreate):
         created_user = register_user(username=user.username, password=user.password)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    return {"message": "User registered successfully", "user_id": created_user.id}
+    return {"message": "User registered successfully", "user_id": created_user.username}
 
 
 @router.put("/kms/update")
@@ -98,7 +98,7 @@ def update_kms_key(key: KMSKey, user: User = Depends(get_current_user)):
 @router.post("/kms/create")
 def create_user_kms_key(user: User = Depends(get_current_user)):
     try:
-        result = create_kms_key_for_user(key_id=f"key-{user.id}")
+        result = create_kms_key_for_user(key_id=f"key-{user.username}")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {"key_name": result}
@@ -107,7 +107,7 @@ def create_user_kms_key(user: User = Depends(get_current_user)):
 @router.post("/kms/rotate")
 def rotate_user_kms_key(user: User = Depends(get_current_user)):
     try:
-        result = create_key_version(key_id=f"key-{user.id}")
+        result = create_key_version(key_id=f"key-{user.username}")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {"key_name": result}
