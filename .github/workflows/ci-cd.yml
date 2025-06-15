@@ -8,6 +8,8 @@ on:
 
 ## CICD secrets ${{ secrets.<secret_name> }}
 # APP_DOMAIN
+# BASIC_AUTH_USERNAME
+# BASIC_AUTH_PASSWORD
 # GCP_BUCKET_NAME
 # GCP_DEFAULT_KMS_KEY
 # GCP_KEY_RING_ID
@@ -86,6 +88,8 @@ jobs:
             --install ${{ env.RELEASE_NAME }} ${{ env.CHART_PATH }} \
             --set image.repository=${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gcs-fastapi-repo/${{ env.IMAGE }} \
             --set image.tag=$GITHUB_SHA \
+            --set secrets.BASIC_AUTH_USERNAME=${{ secrets.BASIC_AUTH_USERNAME }} \
+            --set secrets.BASIC_AUTH_PASSWORD=${{ secrets.BASIC_AUTH_PASSWORD }} \
             --set secrets.JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
             --set env.GCP_BUCKET_NAME=${{ secrets.GCP_BUCKET_NAME }} \
             --set env.GCP_DEFAULT_KMS_KEY=${{ secrets.GCP_DEFAULT_KMS_KEY }} \

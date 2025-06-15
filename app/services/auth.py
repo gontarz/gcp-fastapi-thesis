@@ -1,4 +1,5 @@
 import logging
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -17,6 +18,13 @@ settings = get_settings()
 
 class AuthError(Exception):
     pass
+
+
+def verify_basic_auth(username: str, password: str):
+    correct_username = secrets.compare_digest(username, settings.BASIC_AUTH_USERNAME)
+    correct_password = secrets.compare_digest(password, settings.BASIC_AUTH_PASSWORD)
+    if not (correct_username and correct_password):
+        raise AuthError("Authorization failed")
 
 
 def create_token(user: User) -> str:

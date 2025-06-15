@@ -1,11 +1,12 @@
 import io
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
-from api.dependencies import get_current_user
+from api.dependencies import basic_auth, get_current_user
 from config import get_settings
 from models.request import KMSKey, User, UserCreate
 from services.auth import AuthError, authenticate_user, create_token, register_user
@@ -33,12 +34,12 @@ async def root() -> JSONResponse:
 
 
 @router.get("/files")
-def list_user_files(user: User = Depends(get_current_user)):
+def list_user_files(user: Annotated[User, Depends(get_current_user)]):
     return list_files(username=user.username)
 
 
 @router.post("/files/upload")
-def upload(file: UploadFile = File(...), user: User = Depends(get_current_user)):
+def upload(file: UploadFile, user: Annotated[User, Depends(get_current_user)]):
     max_size = 5
     # max size of file limit
     if file.size > max_size * 1024 * 1024:
@@ -48,7 +49,7 @@ def upload(file: UploadFile = File(...), user: User = Depends(get_current_user))
 
 
 @router.get("/files/{filename}")
-def get_file(filename: str, user: User = Depends(get_current_user)) -> StreamingResponse:
+def get_file(filename: str, user: Annotated[User, Depends(get_current_user)]) -> StreamingResponse:
     file_content = download_file(filename, user)
     return StreamingResponse(
         content=io.BytesIO(file_content),
@@ -57,13 +58,13 @@ def get_file(filename: str, user: User = Depends(get_current_user)) -> Streaming
 
 
 @router.delete("/files/{filename}")
-def delete_user_file(filename: str, user: User = Depends(get_current_user)):
+def delete_user_file(filename: str, user: Annotated[User, Depends(get_current_user)]):
     delete_file(filename, user.username)
     return Response()
 
 
 @router.post("/token")
-def login(form_data: OAuth2PasswordRequestForm = Depends()):
+def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     logger.info(f"username {form_data.username} tries to obtain token")
 
     try:
@@ -75,7 +76,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": token, "token_type": "bearer"}
 
 
-@router.post("/register")
+@router.post("/register", dependencies=[Depends(basic_auth)])
 def register(user: UserCreate):
     try:
         created_user = register_user(username=user.username, password=user.password)
@@ -85,7 +86,7 @@ def register(user: UserCreate):
 
 
 @router.put("/kms/update")
-def update_kms_key(key: KMSKey, user: User = Depends(get_current_user)):
+def update_kms_key(key: KMSKey, user: Annotated[User, Depends(get_current_user)]):
     if not validate_kms_key(key.key):
         raise HTTPException(status_code=400, detail="Invalid or inaccessible KMS key")
 
@@ -96,7 +97,7 @@ def update_kms_key(key: KMSKey, user: User = Depends(get_current_user)):
 
 
 @router.post("/kms/create")
-def create_user_kms_key(user: User = Depends(get_current_user)):
+def create_user_kms_key(user: Annotated[User, Depends(get_current_user)]):
     try:
         result = create_kms_key_for_user(key_id=f"key-{user.username}")
     except Exception as e:
@@ -105,7 +106,7 @@ def create_user_kms_key(user: User = Depends(get_current_user)):
 
 
 @router.post("/kms/rotate")
-def rotate_user_kms_key(user: User = Depends(get_current_user)):
+def rotate_user_kms_key(user: Annotated[User, Depends(get_current_user)]):
     try:
         result = create_key_version(key_id=f"key-{user.username}")
     except Exception as e:

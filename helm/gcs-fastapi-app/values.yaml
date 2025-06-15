@@ -26,6 +26,8 @@ env:
   JWT_EXPIRE_MINUTES:
 
 secrets:
+  BASIC_AUTH_USERNAME:
+  BASIC_AUTH_PASSWORD:
   JWT_SECRET_KEY:
 
 resources:
