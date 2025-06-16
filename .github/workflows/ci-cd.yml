@@ -56,6 +56,14 @@ jobs:
   terraform:
     name: Deploy Terraform
     runs-on: ubuntu-latest
+    env:
+      TF_VAR_app_name: gcs-fastapi-app
+      TF_VAR_backend_sub_domain: ${{ secrets.APP_DOMAIN }}
+      TF_VAR_bucket_name: ${{ secrets.GCP_BUCKET_NAME }}
+      TF_VAR_frontend_domain: k-gontarz.com
+      TF_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
+      TF_VAR_region: europe-central2
+      TF_VAR_zone: europe-central2-a
 
     steps:
       - name: Checkout code
@@ -91,13 +99,14 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: terraform test
 
-      - name: Plan
-        working-directory: ${{ env.TERRAFORM_DIR }}
-        run: terraform plan -out=${{ env.TERRAFORM_PLAN_FILE }}
-
-      - name: Apply
-        working-directory: ${{ env.TERRAFORM_DIR }}
-        run: terraform apply -auto-approve {{ env.TERRAFORM_PLAN_FILE }}
+# TODO uncomment after craetion of gcp role for CICD
+#       - name: Plan
+#         working-directory: ${{ env.TERRAFORM_DIR }}
+#         run: terraform plan -out=${{ env.TERRAFORM_PLAN_FILE }}
+#
+#       - name: Apply
+#         working-directory: ${{ env.TERRAFORM_DIR }}
+#         run: terraform apply -auto-approve {{ env.TERRAFORM_PLAN_FILE }}
 
 
   deploy:
